@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Bell, Calendar, TrendingUp, AlertCircle, PlusCircle } from 'lucide-react';
+import { Users, Bell, Calendar, TrendingUp, AlertCircle, PlusCircle, Clock, Video } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { CollaborationRequestCard } from '../../components/collaboration/CollaborationRequestCard';
 import { InvestorCard } from '../../components/investor/InvestorCard';
 import { useAuth } from '../../context/AuthContext';
+import { useMeetings } from '../../context/MeetingContext';
 import { CollaborationRequest } from '../../types';
 import { getRequestsForEntrepreneur } from '../../data/collaborationRequests';
-import { investors } from '../../data/users';
+import { investors, findUserById } from '../../data/users';
+import { format } from 'date-fns';
 
 export const EntrepreneurDashboard: React.FC = () => {
   const { user } = useAuth();
+  const { requests: meetingRequests } = useMeetings();
   const [collaborationRequests, setCollaborationRequests] = useState<CollaborationRequest[]>([]);
   const [recommendedInvestors, setRecommendedInvestors] = useState(investors.slice(0, 3));
-  
+
   useEffect(() => {
     if (user) {
-      // Load collaboration requests
       const requests = getRequestsForEntrepreneur(user.id);
       setCollaborationRequests(requests);
     }
@@ -33,8 +35,13 @@ export const EntrepreneurDashboard: React.FC = () => {
   };
   
   if (!user) return null;
-  
+
   const pendingRequests = collaborationRequests.filter(req => req.status === 'pending');
+
+  const confirmedMeetings = meetingRequests
+    .filter(r => (r.ownerId === user.id || r.requesterId === user.id) && r.status === 'confirmed')
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+    .slice(0, 3);
   
   return (
     <div className="space-y-6 animate-fade-in">
@@ -93,7 +100,7 @@ export const EntrepreneurDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-accent-700">Upcoming Meetings</p>
-                <h3 className="text-xl font-semibold text-accent-900">2</h3>
+                <h3 className="text-xl font-semibold text-accent-900">{confirmedMeetings.length}</h3>
               </div>
             </div>
           </CardBody>
@@ -147,8 +154,57 @@ export const EntrepreneurDashboard: React.FC = () => {
           </Card>
         </div>
         
-        {/* Recommended investors */}
+        {/* Right column */}
         <div className="space-y-4">
+          {/* Confirmed meetings */}
+          <Card>
+            <CardHeader className="flex justify-between items-center">
+              <h2 className="text-lg font-medium text-gray-900">Upcoming Meetings</h2>
+              <Link to="/calendar" className="text-sm font-medium text-primary-600 hover:text-primary-500">
+                View calendar
+              </Link>
+            </CardHeader>
+            <CardBody className="space-y-3">
+              {confirmedMeetings.length === 0 ? (
+                <div className="text-center py-6">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-3">
+                    <Calendar size={20} className="text-gray-400" />
+                  </div>
+                  <p className="text-sm text-gray-500">No upcoming meetings</p>
+                  <Link to="/calendar">
+                    <Button variant="outline" size="sm" className="mt-2">
+                      Open Calendar
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                confirmedMeetings.map(meeting => {
+                  const isOwner = meeting.ownerId === user.id;
+                  const other = findUserById(isOwner ? meeting.requesterId : meeting.ownerId);
+                  return (
+                    <Link to="/calendar" key={meeting.id}>
+                      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors cursor-pointer">
+                        {other && (
+                          <img src={other.avatarUrl} alt={other.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{meeting.title}</p>
+                          <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                            <Clock size={11} />
+                            <span>{format(new Date(meeting.start), 'MMM d')} · {format(new Date(meeting.start), 'h:mm a')}</span>
+                          </div>
+                          {other && <p className="text-xs text-gray-400 mt-0.5">{other.name}</p>}
+                        </div>
+                        <Badge variant="success" size="sm">Confirmed</Badge>
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
+            </CardBody>
+          </Card>
+
+          {/* Recommended investors */}
           <Card>
             <CardHeader className="flex justify-between items-center">
               <h2 className="text-lg font-medium text-gray-900">Recommended Investors</h2>
