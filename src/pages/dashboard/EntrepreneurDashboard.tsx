@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Bell, Calendar, TrendingUp, AlertCircle, PlusCircle, Clock, Video } from 'lucide-react';
+import { Users, Bell, Calendar, TrendingUp, AlertCircle, PlusCircle, Clock, Video, Wallet } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -8,6 +8,7 @@ import { CollaborationRequestCard } from '../../components/collaboration/Collabo
 import { InvestorCard } from '../../components/investor/InvestorCard';
 import { useAuth } from '../../context/AuthContext';
 import { useMeetings } from '../../context/MeetingContext';
+import { useWallet } from '../../context/WalletContext';
 import { CollaborationRequest } from '../../types';
 import { getRequestsForEntrepreneur } from '../../data/collaborationRequests';
 import { investors, findUserById } from '../../data/users';
@@ -16,6 +17,7 @@ import { format } from 'date-fns';
 export const EntrepreneurDashboard: React.FC = () => {
   const { user } = useAuth();
   const { requests: meetingRequests } = useMeetings();
+  const { getBalance } = useWallet();
   const [collaborationRequests, setCollaborationRequests] = useState<CollaborationRequest[]>([]);
   const [recommendedInvestors, setRecommendedInvestors] = useState(investors.slice(0, 3));
 
@@ -106,19 +108,23 @@ export const EntrepreneurDashboard: React.FC = () => {
           </CardBody>
         </Card>
         
-        <Card className="bg-success-50 border border-success-100">
-          <CardBody>
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-full mr-4">
-                <TrendingUp size={20} className="text-success-700" />
+        <Link to="/payments">
+          <Card className="bg-success-50 border border-success-100 hover:shadow-md transition-shadow cursor-pointer">
+            <CardBody>
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-full mr-4">
+                  <Wallet size={20} className="text-success-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-success-700">Wallet Balance</p>
+                  <h3 className="text-xl font-semibold text-success-900">
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(getBalance(user.id) / 100)}
+                  </h3>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-success-700">Profile Views</p>
-                <h3 className="text-xl font-semibold text-success-900">24</h3>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+            </CardBody>
+          </Card>
+        </Link>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { MeetingProvider } from './context/MeetingContext';
+import { WalletProvider } from './context/WalletContext';
 
 // Layouts
 import { DashboardLayout } from './components/layout/DashboardLayout';
@@ -35,10 +36,14 @@ import Calendar from './pages/Calendar';
 // Video Call Page
 import { VideoCallPage } from './pages/video/VideoCallPage';
 
+// Payments Page
+import { PaymentsPage } from './pages/payments/PaymentsPage';
+
 function App() {
   return (
     <AuthProvider>
       <MeetingProvider>
+      <WalletProvider>
       <Router>
         <Routes>
 
@@ -91,6 +96,10 @@ function App() {
             <Route index element={<VideoCallPage />} />
           </Route>
 
+          <Route path="/payments" element={<DashboardLayout />}>
+            <Route index element={<PaymentsPage />} />
+          </Route>
+
           <Route path="/settings" element={<DashboardLayout />}>
             <Route index element={<SettingsPage />} />
           </Route>
@@ -113,6 +122,7 @@ function App() {
 
         </Routes>
       </Router>
+      </WalletProvider>
       </MeetingProvider>
     </AuthProvider>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, PieChart, Filter, Search, PlusCircle, Calendar, Clock } from 'lucide-react';
+import { Users, PieChart, Filter, Search, PlusCircle, Calendar, Clock, Wallet } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
@@ -8,6 +8,7 @@ import { Badge } from '../../components/ui/Badge';
 import { EntrepreneurCard } from '../../components/entrepreneur/EntrepreneurCard';
 import { useAuth } from '../../context/AuthContext';
 import { useMeetings } from '../../context/MeetingContext';
+import { useWallet } from '../../context/WalletContext';
 import { entrepreneurs, findUserById } from '../../data/users';
 import { getRequestsFromInvestor } from '../../data/collaborationRequests';
 import { format } from 'date-fns';
@@ -15,6 +16,7 @@ import { format } from 'date-fns';
 export const InvestorDashboard: React.FC = () => {
   const { user } = useAuth();
   const { requests: meetingRequests } = useMeetings();
+  const { getBalance } = useWallet();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
 
@@ -112,7 +114,7 @@ export const InvestorDashboard: React.FC = () => {
       </div>
       
       {/* Stats summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-primary-50 border border-primary-100">
           <CardBody>
             <div className="flex items-center">
@@ -126,7 +128,7 @@ export const InvestorDashboard: React.FC = () => {
             </div>
           </CardBody>
         </Card>
-        
+
         <Card className="bg-secondary-50 border border-secondary-100">
           <CardBody>
             <div className="flex items-center">
@@ -140,7 +142,7 @@ export const InvestorDashboard: React.FC = () => {
             </div>
           </CardBody>
         </Card>
-        
+
         <Card className="bg-accent-50 border border-accent-100">
           <CardBody>
             <div className="flex items-center">
@@ -156,6 +158,24 @@ export const InvestorDashboard: React.FC = () => {
             </div>
           </CardBody>
         </Card>
+
+        <Link to="/payments">
+          <Card className="bg-success-50 border border-success-100 hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardBody>
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-full mr-4">
+                  <Wallet size={20} className="text-success-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-success-700">Wallet Balance</p>
+                  <h3 className="text-xl font-semibold text-success-900">
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(getBalance(user.id) / 100)}
+                  </h3>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        </Link>
       </div>
 
       {/* Confirmed meetings panel */}

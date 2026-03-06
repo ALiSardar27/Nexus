@@ -95,6 +95,40 @@ export interface MeetingRequest {
   createdAt: string;
 }
 
+// ── Document Chamber ──────────────────────────────────────────────────────────
+
+export type DocStatus = 'draft' | 'in-review' | 'signed';
+
+export interface ChamberDocument {
+  id: string;
+  name: string;
+  fileType: 'pdf' | 'doc' | 'docx' | 'xls' | 'xlsx' | 'img' | 'other';
+  sizeBytes: number;
+  status: DocStatus;
+  ownerId: string;
+  sharedWith: string[];
+  signatureDataUrl?: string;
+  previewUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── Wallet / Payments ─────────────────────────────────────────────────────────
+
+export type TransactionType = 'deposit' | 'withdraw' | 'transfer' | 'funding';
+export type TransactionStatus = 'completed' | 'pending' | 'failed';
+
+export interface WalletTransaction {
+  id: string;
+  type: TransactionType;
+  amount: number;
+  senderId: string;
+  receiverId: string;
+  description: string;
+  status: TransactionStatus;
+  createdAt: string;
+}
+
 export interface AuthContextType {
   user: User | null;
   login: (email: string, password: string, role: UserRole) => Promise<void>;
