@@ -29,8 +29,11 @@ import { HelpPage } from './pages/help/HelpPage';
 import { DealsPage } from './pages/deals/DealsPage';
 import { ChatPage } from './pages/chat/ChatPage';
 
-// ✅ Calendar Page
+// Calendar Page
 import Calendar from './pages/Calendar';
+
+// Video Call Page
+import { VideoCallPage } from './pages/video/VideoCallPage';
 
 function App() {
   return (
@@ -80,9 +83,14 @@ function App() {
             <Route index element={<DealsPage />} />
           </Route>
 
-            <Route path="/calendar" element={<DashboardLayout />}>
+          <Route path="/calendar" element={<DashboardLayout />}>
             <Route index element={<Calendar />} />
           </Route>
+
+          <Route path="/video-call" element={<DashboardLayout />}>
+            <Route index element={<VideoCallPage />} />
+          </Route>
+
           <Route path="/settings" element={<DashboardLayout />}>
             <Route index element={<SettingsPage />} />
           </Route>

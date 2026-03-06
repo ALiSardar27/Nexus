@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -361,12 +362,14 @@ interface ConfirmedMeetingModalProps {
   request: MeetingRequest;
   currentUserId: string;
   onClose: () => void;
+  onJoinVideoCall: () => void;
 }
 
 const ConfirmedMeetingModal: React.FC<ConfirmedMeetingModalProps> = ({
   request,
   currentUserId,
   onClose,
+  onJoinVideoCall,
 }) => {
   const isOwner = request.ownerId === currentUserId;
   const otherPersonId = isOwner ? request.requesterId : request.ownerId;
@@ -432,7 +435,7 @@ const ConfirmedMeetingModal: React.FC<ConfirmedMeetingModalProps> = ({
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" fullWidth leftIcon={<Video size={14} />}>
+            <Button variant="outline" fullWidth leftIcon={<Video size={14} />} onClick={onJoinVideoCall}>
               Join Video Call
             </Button>
             <Button fullWidth onClick={onClose}>Close</Button>
@@ -519,6 +522,7 @@ type ModalType =
 
 const Calendar: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { slots, requests, addSlot, updateSlot, removeSlot, addRequest, acceptRequest, declineRequest } = useMeetings();
   const [modal, setModal] = useState<ModalType>(null);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'requests' | 'slots'>('upcoming');
@@ -912,6 +916,10 @@ const Calendar: React.FC = () => {
           request={modal.request}
           currentUserId={user.id}
           onClose={() => setModal(null)}
+          onJoinVideoCall={() => {
+            setModal(null);
+            navigate('/video-call');
+          }}
         />
       )}
     </div>
