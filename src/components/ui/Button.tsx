@@ -14,6 +14,7 @@ interface Props {
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
   disabled?: boolean;
+  isLoading?: boolean;
 }
 
 export const Button: React.FC<Props> = ({
@@ -27,6 +28,7 @@ export const Button: React.FC<Props> = ({
   rightIcon,
   fullWidth = false,
   disabled = false,
+  isLoading = false,
 }) => {
   const base =
     "inline-flex items-center justify-center rounded-md font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2";
@@ -49,14 +51,21 @@ export const Button: React.FC<Props> = ({
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || isLoading}
       className={`${base} ${variants[variant]} ${sizes[size]} ${
         fullWidth ? "w-full" : ""
       } ${className}`}
     >
-      {leftIcon && <span className="shrink-0">{leftIcon}</span>}
+      {isLoading ? (
+        <svg className="animate-spin h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+      ) : (
+        leftIcon && <span className="shrink-0">{leftIcon}</span>
+      )}
       {children}
-      {rightIcon && <span className="shrink-0">{rightIcon}</span>}
+      {rightIcon && !isLoading && <span className="shrink-0">{rightIcon}</span>}
     </button>
   );
 };

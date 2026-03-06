@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Bell, Calendar, TrendingUp, AlertCircle, PlusCircle, Clock, Video, Wallet } from 'lucide-react';
+import { Users, Bell, Calendar, TrendingUp, AlertCircle, PlusCircle, Clock, Video, Wallet, HelpCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -9,22 +9,69 @@ import { InvestorCard } from '../../components/investor/InvestorCard';
 import { useAuth } from '../../context/AuthContext';
 import { useMeetings } from '../../context/MeetingContext';
 import { useWallet } from '../../context/WalletContext';
+import { useTour } from '../../context/TourContext';
 import { CollaborationRequest } from '../../types';
 import { getRequestsForEntrepreneur } from '../../data/collaborationRequests';
 import { investors, findUserById } from '../../data/users';
 import { format } from 'date-fns';
+import type { Step } from 'react-joyride';
 
 export const EntrepreneurDashboard: React.FC = () => {
   const { user } = useAuth();
   const { requests: meetingRequests } = useMeetings();
   const { getBalance } = useWallet();
+  const { startTour, hasSeenTour, markTourSeen } = useTour();
   const [collaborationRequests, setCollaborationRequests] = useState<CollaborationRequest[]>([]);
   const [recommendedInvestors, setRecommendedInvestors] = useState(investors.slice(0, 3));
+
+  const TOUR_STEPS: Step[] = [
+    {
+      target: '[data-tour="welcome"]',
+      title: 'Welcome to Business Nexus!',
+      content: 'This is your entrepreneur dashboard. Here you can see an overview of your startup activity, connections, and upcoming meetings.',
+      placement: 'bottom',
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="stats"]',
+      title: 'Quick Stats',
+      content: 'These cards show your pending requests, connections, upcoming meetings, and wallet balance at a glance. Click the wallet card to manage payments.',
+      placement: 'bottom',
+    },
+    {
+      target: '[data-tour="collab-requests"]',
+      title: 'Collaboration Requests',
+      content: 'When investors express interest in your startup, their requests appear here. You can accept or decline each one.',
+      placement: 'top',
+    },
+    {
+      target: '[data-tour="meetings"]',
+      title: 'Upcoming Meetings',
+      content: 'Confirmed meetings with investors are listed here. Click to view the full calendar and manage availability.',
+      placement: 'left',
+    },
+    {
+      target: '[data-tour="investors"]',
+      title: 'Recommended Investors',
+      content: 'We recommend investors that match your industry. Click "View all" to browse the full investor directory.',
+      placement: 'left',
+    },
+  ];
 
   useEffect(() => {
     if (user) {
       const requests = getRequestsForEntrepreneur(user.id);
       setCollaborationRequests(requests);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user && !hasSeenTour('entrepreneur-dashboard')) {
+      const timer = setTimeout(() => {
+        startTour(TOUR_STEPS);
+        markTourSeen('entrepreneur-dashboard');
+      }, 800);
+      return () => clearTimeout(timer);
     }
   }, [user]);
   
@@ -45,25 +92,30 @@ export const EntrepreneurDashboard: React.FC = () => {
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
     .slice(0, 3);
   
+  const handleStartTour = () => startTour(TOUR_STEPS);
+
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center" data-tour="welcome">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome, {user.name}</h1>
           <p className="text-gray-600">Here's what's happening with your startup today</p>
         </div>
-        
-        <Link to="/investors">
-          <Button
-            leftIcon={<PlusCircle size={18} />}
-          >
-            Find Investors
+
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={handleStartTour} leftIcon={<HelpCircle size={16} />}>
+            Tour
           </Button>
-        </Link>
+          <Link to="/investors">
+            <Button leftIcon={<PlusCircle size={18} />}>
+              Find Investors
+            </Button>
+          </Link>
+        </div>
       </div>
       
       {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-tour="stats">
         <Card className="bg-primary-50 border border-primary-100">
           <CardBody>
             <div className="flex items-center">
@@ -129,7 +181,7 @@ export const EntrepreneurDashboard: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Collaboration requests */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4" data-tour="collab-requests">
           <Card>
             <CardHeader className="flex justify-between items-center">
               <h2 className="text-lg font-medium text-gray-900">Collaboration Requests</h2>
@@ -163,7 +215,7 @@ export const EntrepreneurDashboard: React.FC = () => {
         {/* Right column */}
         <div className="space-y-4">
           {/* Confirmed meetings */}
-          <Card>
+          <Card data-tour="meetings">
             <CardHeader className="flex justify-between items-center">
               <h2 className="text-lg font-medium text-gray-900">Upcoming Meetings</h2>
               <Link to="/calendar" className="text-sm font-medium text-primary-600 hover:text-primary-500">
@@ -211,7 +263,7 @@ export const EntrepreneurDashboard: React.FC = () => {
           </Card>
 
           {/* Recommended investors */}
-          <Card>
+          <Card data-tour="investors">
             <CardHeader className="flex justify-between items-center">
               <h2 className="text-lg font-medium text-gray-900">Recommended Investors</h2>
               <Link to="/investors" className="text-sm font-medium text-primary-600 hover:text-primary-500">

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import { MeetingProvider } from './context/MeetingContext';
 import { WalletProvider } from './context/WalletContext';
+import { TourProvider } from './context/TourContext';
 
 // Layouts
 import { DashboardLayout } from './components/layout/DashboardLayout';
@@ -44,6 +45,7 @@ function App() {
     <AuthProvider>
       <MeetingProvider>
       <WalletProvider>
+      <TourProvider>
       <Router>
         <Routes>
 
@@ -122,6 +124,7 @@ function App() {
 
         </Routes>
       </Router>
+      </TourProvider>
       </WalletProvider>
       </MeetingProvider>
     </AuthProvider>

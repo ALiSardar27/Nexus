@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, CircleDollarSign, Building2, AlertCircle } from 'lucide-react';
+import { User, Mail, Lock, CircleDollarSign, Building2, AlertCircle, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { PasswordStrengthMeter } from '../../components/ui/PasswordStrengthMeter';
 import { UserRole } from '../../types';
 
 export const RegisterPage: React.FC = () => {
@@ -14,34 +15,37 @@ export const RegisterPage: React.FC = () => {
   const [role, setRole] = useState<UserRole>('entrepreneur');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { register } = useAuth();
   const navigate = useNavigate();
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
-    // Validate passwords match
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
     setIsLoading(true);
-    
+
     try {
       await register(name, email, password, role);
-      // Redirect based on user role
       navigate(role === 'entrepreneur' ? '/dashboard/entrepreneur' : '/dashboard/investor');
     } catch (err) {
       setError((err as Error).message);
       setIsLoading(false);
     }
   };
-  
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="w-12 h-12 bg-primary-600 rounded-md flex items-center justify-center">
@@ -62,46 +66,39 @@ export const RegisterPage: React.FC = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {error && (
-            <div className="mb-4 bg-error-50 border border-error-500 text-error-700 px-4 py-3 rounded-md flex items-start">
-              <AlertCircle size={18} className="mr-2 mt-0.5" />
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start text-sm">
+              <AlertCircle size={16} className="mr-2 mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
-          
-          <form className="space-y-6" onSubmit={handleSubmit}>
+
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 I am registering as a
               </label>
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${
-                    role === 'entrepreneur'
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                  onClick={() => setRole('entrepreneur')}
-                >
-                  <Building2 size={18} className="mr-2" />
-                  Entrepreneur
-                </button>
-                
-                <button
-                  type="button"
-                  className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${
-                    role === 'investor'
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                  onClick={() => setRole('investor')}
-                >
-                  <CircleDollarSign size={18} className="mr-2" />
-                  Investor
-                </button>
+                {([
+                  { value: 'entrepreneur' as const, icon: Building2, label: 'Entrepreneur' },
+                  { value: 'investor' as const, icon: CircleDollarSign, label: 'Investor' },
+                ]).map(({ value, icon: Icon, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`py-3 px-4 border rounded-lg flex items-center justify-center text-sm font-medium transition-all ${
+                      role === value
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-500/20'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setRole(value)}
+                  >
+                    <Icon size={18} className="mr-2" />
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
-            
+
             <Input
               label="Full name"
               type="text"
@@ -111,7 +108,7 @@ export const RegisterPage: React.FC = () => {
               fullWidth
               startAdornment={<User size={18} />}
             />
-            
+
             <Input
               label="Email address"
               type="email"
@@ -121,74 +118,65 @@ export const RegisterPage: React.FC = () => {
               fullWidth
               startAdornment={<Mail size={18} />}
             />
-            
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              fullWidth
-              startAdornment={<Lock size={18} />}
-            />
-            
+
+            <div>
+              <Input
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                required
+                fullWidth
+                startAdornment={<Lock size={18} />}
+              />
+              <PasswordStrengthMeter password={password} />
+            </div>
+
             <Input
               label="Confirm password"
               type="password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}
               required
               fullWidth
               startAdornment={<Lock size={18} />}
+              error={confirmPassword && password !== confirmPassword ? 'Passwords do not match' : undefined}
             />
-            
-            <div className="flex items-center">
+
+            <div className="flex items-start gap-2">
               <input
                 id="terms"
                 name="terms"
                 type="checkbox"
                 required
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
               />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="terms" className="text-sm text-gray-700">
                 I agree to the{' '}
-                <a href="#" className="font-medium text-primary-600 hover:text-primary-500">
-                  Terms of Service
-                </a>{' '}
+                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">Terms of Service</a>{' '}
                 and{' '}
-                <a href="#" className="font-medium text-primary-600 hover:text-primary-500">
-                  Privacy Policy
-                </a>
+                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">Privacy Policy</a>
               </label>
             </div>
-            
-            <Button
-              type="submit"
-              fullWidth
-              isLoading={isLoading}
-            >
+
+            {/* Security badge */}
+            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-lg">
+              <Shield size={16} className="text-green-600 shrink-0" />
+              <p className="text-xs text-green-700">
+                Your account will be secured with <span className="font-semibold">2FA verification</span> on every login.
+              </p>
+            </div>
+
+            <Button type="submit" fullWidth isLoading={isLoading}>
               Create account
             </Button>
           </form>
-          
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or</span>
-              </div>
-            </div>
-            
-            <div className="mt-2 text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{' '}
-                <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
-                  Sign in
-                </Link>
-              </p>
-            </div>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">Sign in</Link>
+            </p>
           </div>
         </div>
       </div>

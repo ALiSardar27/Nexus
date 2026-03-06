@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, PieChart, Filter, Search, PlusCircle, Calendar, Clock, Wallet } from 'lucide-react';
+import { Users, PieChart, Filter, Search, PlusCircle, Calendar, Clock, Wallet, HelpCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
@@ -9,16 +9,57 @@ import { EntrepreneurCard } from '../../components/entrepreneur/EntrepreneurCard
 import { useAuth } from '../../context/AuthContext';
 import { useMeetings } from '../../context/MeetingContext';
 import { useWallet } from '../../context/WalletContext';
+import { useTour } from '../../context/TourContext';
 import { entrepreneurs, findUserById } from '../../data/users';
 import { getRequestsFromInvestor } from '../../data/collaborationRequests';
 import { format } from 'date-fns';
+import type { Step } from 'react-joyride';
 
 export const InvestorDashboard: React.FC = () => {
   const { user } = useAuth();
   const { requests: meetingRequests } = useMeetings();
   const { getBalance } = useWallet();
+  const { startTour, hasSeenTour, markTourSeen } = useTour();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+
+  const TOUR_STEPS: Step[] = [
+    {
+      target: '[data-tour="inv-welcome"]',
+      title: 'Welcome to Your Investor Dashboard!',
+      content: 'Discover promising startups, track your investments, and manage meetings all from one place.',
+      placement: 'bottom',
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="inv-search"]',
+      title: 'Search & Filter',
+      content: 'Search by startup name, industry, or keywords. Use the filter badges to narrow by specific industries.',
+      placement: 'bottom',
+    },
+    {
+      target: '[data-tour="inv-stats"]',
+      title: 'Portfolio Overview',
+      content: 'Quick stats showing total startups available, industry coverage, meetings, and your wallet balance. Click the wallet card to manage funds.',
+      placement: 'bottom',
+    },
+    {
+      target: '[data-tour="inv-startups"]',
+      title: 'Featured Startups',
+      content: 'Browse and connect with entrepreneurs. Click any card to view their full profile, send messages, or initiate collaboration.',
+      placement: 'top',
+    },
+  ];
+
+  useEffect(() => {
+    if (user && !hasSeenTour('investor-dashboard')) {
+      const timer = setTimeout(() => {
+        startTour(TOUR_STEPS);
+        markTourSeen('investor-dashboard');
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   if (!user) return null;
 
@@ -65,23 +106,26 @@ export const InvestorDashboard: React.FC = () => {
   
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4" data-tour="inv-welcome">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Discover Startups</h1>
           <p className="text-gray-600">Find and connect with promising entrepreneurs</p>
         </div>
-        
-        <Link to="/entrepreneurs">
-          <Button
-            leftIcon={<PlusCircle size={18} />}
-          >
-            View All Startups
+
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => startTour(TOUR_STEPS)} leftIcon={<HelpCircle size={16} />}>
+            Tour
           </Button>
-        </Link>
+          <Link to="/entrepreneurs">
+            <Button leftIcon={<PlusCircle size={18} />}>
+              View All Startups
+            </Button>
+          </Link>
+        </div>
       </div>
       
       {/* Filters and search */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-4" data-tour="inv-search">
         <div className="w-full md:w-2/3">
           <Input
             placeholder="Search startups, industries, or keywords..."
@@ -114,7 +158,7 @@ export const InvestorDashboard: React.FC = () => {
       </div>
       
       {/* Stats summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-tour="inv-stats">
         <Card className="bg-primary-50 border border-primary-100">
           <CardBody>
             <div className="flex items-center">
@@ -230,7 +274,7 @@ export const InvestorDashboard: React.FC = () => {
       )}
       
       {/* Entrepreneurs grid */}
-      <div>
+      <div data-tour="inv-startups">
         <Card>
           <CardHeader>
             <h2 className="text-lg font-medium text-gray-900">Featured Startups</h2>
